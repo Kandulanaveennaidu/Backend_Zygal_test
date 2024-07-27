@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Number Frequency Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f0f0f0;
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+      }
+      #numberForm {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+      #numberInput {
+        padding: 10px;
+        font-size: 16px;
+        width: 100px;
+        border: 1px solid #ddd;
+        border-radius: 4px 0 0 4px;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 0 4px 4px 0;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      #chartContainer {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Number Frequency Chart</h1>
+    <form id="numberForm">
+      <input
+        type="number"
+        id="numberInput"
+        min="1"
+        max="100"
+        required
+        placeholder="1-100"
+      />
+      <button type="submit">Submit</button>
+    </form>
+    <div id="chartContainer">
+      <canvas id="myChart"></canvas>
+    </div>
+
+    <script>
+      const ctx = document.getElementById("myChart").getContext("2d");
+      let myChart;
+
+      function updateChart(data) {
+        const labels = Object.keys(data).sort((a, b) => a - b);
+        const values = labels.map((label) => data[label]);
+
+        if (myChart) {
+          myChart.destroy();
+        }
+
+        myChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Frequency",
+                data: values,
+                backgroundColor: "rgba(75, 192, 192, 0.6)",
+                borderColor: "rgba(75, 192, 192, 1)",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1,
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                display: false,
+              },
+              title: {
+                display: true,
+                text: "Number Frequency",
+              },
+            },
+          },
+        });
+      }
+
+      function fetchData() {
+        fetch("/api/data")
+          .then((response) => response.json())
+          .then((data) => updateChart(data))
+          .catch((error) => console.error("Error:", error));
+      }
+
+      document
+        .getElementById("numberForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const number = document.getElementById("numberInput").value;
+
+          fetch("/api/data", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ number: number }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              updateChart(data);
+              document.getElementById("numberInput").value = "";
+            })
+            .catch((error) => console.error("Error:", error));
+        });
+      fetchData();
+    </script>
+  </body>
+</html>
